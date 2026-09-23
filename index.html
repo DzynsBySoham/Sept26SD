@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DZYNSBYSOHAM | INVOICE #SD002</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --printer-body: #1e2026;
+            --printer-border: rgba(255, 255, 255, 0.1);
+            --printer-screen: #0a0b0e;
+            --accent: #ccff00;
+            --text-main: #ffffff;
+            --text-muted: #8e929b;
+            --paper-bg: #f8f9fa;
+            --paper-text: #1a1a1a;
+            --paper-muted: #666666;
+            --paper-border: #e2e4e8;
+            --danger: #ff5252;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(204, 255, 0, 0.05) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 40%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2.5rem 1rem 5rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .receipt-printer-root {
+            width: 100%;
+            max-width: 440px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .receipt-printer-machine {
+            width: 100%;
+            background: linear-gradient(180deg, #282a33 0%, #1a1b22 100%);
+            border-radius: 28px 28px 16px 16px;
+            padding: 1.25rem 1.25rem 1rem;
+            border: 1px solid var(--printer-border);
+            box-shadow: 
+                0 20px 40px -10px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+                0 2px 4px rgba(255, 255, 255, 0.1) inset;
+            position: relative;
+            z-index: 10;
+        }
+
+        .receipt-printer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 0 0.25rem;
+        }
+
+        .printer-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .printer-led-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .printer-led {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #333;
+            transition: all 0.3s ease;
+        }
+
+        .printer-led.active {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        .receipt-printer-screen {
+            background: var(--printer-screen);
+            border-radius: 16px;
+            padding: 0.85rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 
+                0 3px 8px rgba(0,0,0,0.7) inset,
+                0 1px 2px rgba(0,0,0,0.9) inset;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .receipt-printer-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .status-icon-wrapper {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(204, 255, 0, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .checkmark-icon {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            display: none;
+        }
+
+        .status-text-slider {
+            height: 18px;
+            overflow: hidden;
+            position: relative;
+            flex-grow: 1;
+        }
+
+        .status-text-track {
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .status-label {
+            height: 18px;
+            line-height: 18px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #d1d5db;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+
+        .stage-indicator {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--accent);
+            background: rgba(204, 255, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .receipt-printer-output {
+            width: 93%;
+            margin-top: -8px;
+            position: relative;
+            z-index: 5;
+            overflow: visible;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.5));
+        }
+
+        .printer-slot-edge {
+            height: 8px;
+            background: #0d0e12;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.8) inset;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            z-index: 11;
+        }
+
+        .receipt-printer-paper {
+            background-color: var(--paper-bg);
+            background-image: radial-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 0);
+            background-size: 6px 6px;
+            color: var(--paper-text);
+            padding: 1.75rem 1.4rem 2rem;
+            width: 100%;
+            box-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.1),
+                0 10px 30px rgba(0, 0, 0, 0.25);
+            clip-path: polygon(
+                0% 0%, 100% 0%, 100% calc(100% - 4px),
+                98.75% 100%, 97.5% calc(100% - 4px), 96.25% 100%, 95.0% calc(100% - 4px),
+                93.75% 100%, 92.5% calc(100% - 4px), 91.25% 100%, 90.0% calc(100% - 4px),
+                88.75% 100%, 87.5% calc(100% - 4px), 86.25% 100%, 85.0% calc(100% - 4px),
+                83.75% 100%, 82.5% calc(100% - 4px), 81.25% 100%, 80.0% calc(100% - 4px),
+                78.75% 100%, 77.5% calc(100% - 4px), 76.25% 100%, 75.0% calc(100% - 4px),
+                73.75% 100%, 72.5% calc(100% - 4px), 71.25% 100%, 70.0% calc(100% - 4px),
+                68.75% 100%, 67.5% calc(100% - 4px), 66.25% 100%, 65.0% calc(100% - 4px),
+                63.75% 100%, 62.5% calc(100% - 4px), 61.25% 100%, 60.0% calc(100% - 4px),
+                58.75% 100%, 57.5% calc(100% - 4px), 56.25% 100%, 55.0% calc(100% - 4px),
+                53.75% 100%, 52.5% calc(100% - 4px), 51.25% 100%, 50.0% calc(100% - 4px),
+                48.75% 100%, 47.5% calc(100% - 4px), 46.25% 100%, 45.0% calc(100% - 4px),
+                43.75% 100%, 42.5% calc(100% - 4px), 41.25% 100%, 40.0% calc(100% - 4px),
+                38.75% 100%, 37.5% calc(100% - 4px), 36.25% 100%, 35.0% calc(100% - 4px),
+                33.75% 100%, 32.5% calc(100% - 4px), 31.25% 100%, 30.0% calc(100% - 4px),
+                28.75% 100%, 27.5% calc(100% - 4px), 26.25% 100%, 25.0% calc(100% - 4px),
+                23.75% 100%, 22.5% calc(100% - 4px), 21.25% 100%, 20.0% calc(100% - 4px),
+                18.75% 100%, 17.5% calc(100% - 4px), 16.25% 100%, 15.0% calc(100% - 4px),
+                13.75% 100%, 12.5% calc(100% - 4px), 11.25% 100%, 10.0% calc(100% - 4px),
+                8.75% 100%, 7.5% calc(100% - 4px), 6.25% 100%, 5.0% calc(100% - 4px),
+                3.75% 100%, 2.5% calc(100% - 4px), 1.25% 100%, 0% calc(100% - 4px)
+            );
+            transform: translateY(calc(-100% + 2px));
+            opacity: 0;
+            will-change: transform, opacity;
+            transition: opacity 0.2s ease;
+        }
+
+        @keyframes feedPaperStepped {
+            0% { transform: translateY(calc(-100% + 2px)); }
+            6% { transform: translateY(-91%); }
+            10% { transform: translateY(-91%); }
+            17% { transform: translateY(-81%); }
+            21% { transform: translateY(-81%); }
+            28% { transform: translateY(-70%); }
+            32% { transform: translateY(-70%); }
+            39% { transform: translateY(-58%); }
+            43% { transform: translateY(-58%); }
+            50% { transform: translateY(-45%); }
+            54% { transform: translateY(-45%); }
+            61% { transform: translateY(-32%); }
+            65% { transform: translateY(-32%); }
+            72% { transform: translateY(-20%); }
+            76% { transform: translateY(-20%); }
+            83% { transform: translateY(-10%); }
+            87% { transform: translateY(-10%); }
+            94% { transform: translateY(-3%); }
+            97% { transform: translateY(-3%); }
+            100% { transform: translateY(0%); }
+        }
+
+        .stage-processing .receipt-printer-paper {
+            opacity: 0;
+            transform: translateY(calc(-100% + 2px));
+        }
+
+        .stage-printing .receipt-printer-paper {
+            opacity: 1;
+            animation: feedPaperStepped 1.75s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+        }
+
+        .stage-complete .receipt-printer-paper {
+            opacity: 1;
+            transform: translateY(0%);
+        }
+
+        .stage-complete .spinner {
+            display: none;
+        }
+
+        .stage-complete .checkmark-icon {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed var(--paper-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .receipt-brand-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.1;
+            text-transform: uppercase;
+            color: #111;
+            letter-spacing: -0.5px;
+        }
+
+        .receipt-sub {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--paper-muted);
+            margin-top: 4px;
+            font-weight: 700;
+        }
+
+        .receipt-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem 0.5rem;
+            font-size: 0.75rem;
+            border-bottom: 1px dashed var(--paper-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .meta-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--paper-muted);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .meta-val {
+            font-weight: 700;
+            color: var(--paper-text);
+        }
+
+        .meta-val-syne {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .status-badge-inline {
+            display: inline-block;
+            background: #111;
+            color: var(--accent);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            width: fit-content;
+        }
+
+        .receipt-items-heading {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--paper-muted);
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .receipt-item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            border-bottom: 1px dashed var(--paper-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .receipt-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .receipt-thumb {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #eee;
+            flex-shrink: 0;
+        }
+
+        .item-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 0.8rem;
+            line-height: 1.2;
+        }
+
+        .item-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .receipt-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            border-bottom: 2px dashed var(--paper-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--paper-muted);
+            font-weight: 600;
+        }
+
+        .summary-row.danger {
+            color: var(--danger);
+        }
+
+        .summary-row.total {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--paper-border);
+            color: var(--paper-text);
+            align-items: baseline;
+        }
+
+        .total-amount {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #000;
+            line-height: 1;
+        }
+
+        .receipt-qr-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.5rem;
+        }
+
+        .qr-container {
+            position: relative;
+            width: 105px;
+            height: 105px;
+            cursor: pointer;
+            border-radius: 10px;
+            padding: 5px;
+            background: #fff;
+            border: 1px solid var(--paper-border);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease;
+        }
+
+        .qr-container:hover {
+            transform: scale(1.03);
+        }
+
+        .qr-code {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .qr-dl-btn {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            color: var(--accent);
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            text-align: center;
+            padding: 4px;
+            line-height: 1.3;
+        }
+
+        .qr-container:hover .qr-dl-btn {
+            opacity: 1;
+        }
+
+        .qr-caption {
+            font-size: 0.65rem;
+            color: var(--paper-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .receipt-printer-paper {
+                animation: none !important;
+                transform: translateY(0%) !important;
+                opacity: 1 !important;
+            }
+            .spinner {
+                animation: none !important;
+            }
+            .status-text-track {
+                transition: none !important;
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media print {
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+            }
+            .receipt-printer-machine, .receipt-slot-edge {
+                display: none !important;
+            }
+            .receipt-printer-paper {
+                clip-path: none !important;
+                box-shadow: none !important;
+                transform: none !important;
+                opacity: 1 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+            .qr-dl-btn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="receipt-printer-root" id="receiptPrinterRoot" aria-live="polite">
+        <div class="receipt-printer-machine">
+            <header class="receipt-printer-header">
+                <span class="printer-brand">DZYNSBYSOHAM</span>
+                <div class="printer-led-group">
+                    <span class="printer-led active" id="ledPower" title="Power"></span>
+                    <span class="printer-led" id="ledStatus" title="Activity"></span>
+                </div>
+            </header>
+
+            <div class="receipt-printer-screen">
+                <div class="receipt-printer-status">
+                    <div class="status-icon-wrapper">
+                        <div class="spinner" id="spinnerIcon" aria-hidden="true"></div>
+                        <svg class="checkmark-icon" id="checkIcon" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="status-text-slider">
+                        <div class="status-text-track" id="statusTrack">
+                            <span class="status-label">Processing your order</span>
+                            <span class="status-label">Printing your receipt</span>
+                            <span class="status-label">Order complete</span>
+                        </div>
+                    </div>
+                    <span class="stage-indicator" id="stageBadge">SYS:OK</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="receipt-printer-output">
+            <div class="printer-slot-edge"></div>
+
+            <article class="receipt-printer-paper" id="receiptPaper">
+                <header class="receipt-header">
+                    <p class="receipt-sub">Creative Billing</p>
+                    <h1 class="receipt-brand-title">dzynsby<br>soham</h1>
+                </header>
+
+                <section class="receipt-meta-grid">
+                    <div class="meta-group">
+                        <span class="meta-label">Invoice ID</span>
+                        <span class="meta-val meta-val-syne">#SD002</span>
+                    </div>
+                    <div class="meta-group" style="text-align: right;">
+                        <span class="meta-label">Date</span>
+                        <span class="meta-val">September 23, 2026</span>
+                    </div>
+                    <div class="meta-group">
+                        <span class="meta-label">Billed To</span>
+                        <span class="meta-val">Shaggy</span>
+                    </div>
+                    <div class="meta-group" style="text-align: right;">
+                        <span class="meta-label">Billing Period</span>
+                        <span class="meta-val">Sept'26</span>
+                    </div>
+                    <div class="meta-group">
+                        <span class="meta-label">Status</span>
+                        <span class="status-badge-inline">AWAITING PAYMENT</span>
+                    </div>
+                    <div class="meta-group" style="text-align: right;">
+                        <span class="meta-label">Cycle</span>
+                        <span class="meta-val">Sept'26</span>
+                    </div>
+                </section>
+
+                <div class="receipt-items-heading">
+                    <span>Deliverables (4)</span>
+                    <span>Amount</span>
+                </div>
+
+                <div class="receipt-item-list">
+                    <div class="receipt-item-row">
+                        <div class="item-info">
+                            <img src="Images/thumbnail1.jpg" alt="Thumbnail 1" class="receipt-thumb">
+                            <div class="item-details">
+                                <span class="item-name">Thumbnail 1</span>
+                            </div>
+                        </div>
+                        <span class="item-price">₹350</span>
+                    </div>
+
+                    <div class="receipt-item-row">
+                        <div class="item-info">
+                            <img src="Images/thumbnail2.jpg" alt="Thumbnail 2" class="receipt-thumb">
+                            <div class="item-details">
+                                <span class="item-name">Thumbnail 2</span>
+                            </div>
+                        </div>
+                        <span class="item-price">₹350</span>
+                    </div>
+
+                    <div class="receipt-item-row">
+                        <div class="item-info">
+                            <img src="Images/thumbnail3.jpg" alt="Thumbnail 3" class="receipt-thumb">
+                            <div class="item-details">
+                                <span class="item-name">Thumbnail 3</span>
+                            </div>
+                        </div>
+                        <span class="item-price">₹350</span>
+                    </div>
+
+                    <div class="receipt-item-row">
+                        <div class="item-info">
+                            <img src="Images/thumbnail4.jpg" alt="Thumbnail 4" class="receipt-thumb">
+                            <div class="item-details">
+                                <span class="item-name">Thumbnail 4</span>
+                            </div>
+                        </div>
+                        <span class="item-price">₹350</span>
+                    </div>
+
+ <div class="receipt-item-row">
+                        <div class="item-info">
+                            <img src="Images/thumbnail5.jpg" alt="Thumbnail 5" class="receipt-thumb">
+                            <div class="item-details">
+                                <span class="item-name">Thumbnail 5</span>
+                            </div>
+                        </div>
+                        <span class="item-price">₹350</span>
+                    </div>
+                </div>
+
+                <section class="receipt-summary">
+                    <div class="summary-row">
+                        <span>Gross Total</span>
+                        <span style="font-family: 'JetBrains Mono', monospace;">₹1,400</span>
+                    </div>
+                    <div class="summary-row danger">
+                        <span>Advance Paid</span>
+                        <span style="font-family: 'JetBrains Mono', monospace;">₹0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span class="meta-label" style="font-size: 0.75rem;">Balance Due</span>
+                        <span class="total-amount">₹1,750</span>
+                    </div>
+                </section>
+
+                <section class="receipt-qr-section">
+                    <div class="qr-container" onclick="downloadQR()" role="button" tabindex="0" aria-label="Download Payment QR">
+                        <img src="Images/pay.png" id="qrImage" class="qr-code" alt="Scan to Pay">
+                        <div class="qr-dl-btn">SAVE QR<br>TO DEVICE</div>
+                    </div>
+                    <span class="qr-caption">Scan or tap to download QR</span>
+                </section>
+            </article>
+        </div>
+    </main>
+
+    <script>
+        const STAGES = {
+            PROCESSING: 'processing',
+            PRINTING: 'printing',
+            COMPLETE: 'complete'
+        };
+
+        let currentStage = STAGES.PROCESSING;
+
+        const rootEl = document.getElementById('receiptPrinterRoot');
+        const statusTrack = document.getElementById('statusTrack');
+        const stageBadge = document.getElementById('stageBadge');
+        const ledStatus = document.getElementById('ledStatus');
+
+        function setStage(stage) {
+            currentStage = stage;
+            rootEl.classList.remove('stage-processing', 'stage-printing', 'stage-complete');
+            rootEl.classList.add(`stage-${stage}`);
+
+            if (stage === STAGES.PROCESSING) {
+                statusTrack.style.transform = 'translateY(0px)';
+                stageBadge.textContent = 'QUEUED';
+                ledStatus.classList.remove('active');
+            } else if (stage === STAGES.PRINTING) {
+                statusTrack.style.transform = 'translateY(-18px)';
+                stageBadge.textContent = 'PRINTING';
+                ledStatus.classList.add('active');
+            } else if (stage === STAGES.COMPLETE) {
+                statusTrack.style.transform = 'translateY(-36px)';
+                stageBadge.textContent = 'DONE';
+                ledStatus.classList.add('active');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (prefersReducedMotion) {
+                setStage(STAGES.COMPLETE);
+                return;
+            }
+
+            setStage(STAGES.PROCESSING);
+
+            setTimeout(() => {
+                setStage(STAGES.PRINTING);
+
+                setTimeout(() => {
+                    setStage(STAGES.COMPLETE);
+                }, 1750);
+            }, 900);
+        });
+
+        function downloadQR() {
+            const qrImageUrl = 'Images/pay.png';
+            const link = document.createElement('a');
+            link.href = qrImageUrl;
+            link.download = 'Shaggy_Payment_QR.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
